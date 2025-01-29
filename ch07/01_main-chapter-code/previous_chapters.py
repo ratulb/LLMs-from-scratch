@@ -287,7 +287,7 @@ def generate(model, idx, max_new_tokens, context_size, temperature=0.0, top_k=No
 
 
 def train_model_simple(model, train_loader, val_loader, optimizer, device, num_epochs,
-                       eval_freq, eval_iter, start_context, tokenizer):
+                       eval_freq, eval_iter, start_context, tokenizer, scaler):
     # Initialize lists to track losses and tokens seen
     train_losses, val_losses, track_tokens_seen = [], [], []
     tokens_seen, global_step = 0, -1
@@ -299,8 +299,11 @@ def train_model_simple(model, train_loader, val_loader, optimizer, device, num_e
         for input_batch, target_batch in train_loader:
             optimizer.zero_grad()  # Reset loss gradients from previous batch iteration
             loss = calc_loss_batch(input_batch, target_batch, model, device)
-            loss.backward()  # Calculate loss gradients
-            optimizer.step()  # Update model weights using loss gradients
+            scaler.scale(loss).backward()
+            #loss.backward()  # Calculate loss gradients
+            #optimizer.step()  # Update model weights using loss gradients
+            scaler.step(optimizer)
+            scaler.update()
             tokens_seen += input_batch.numel()
             global_step += 1
 
@@ -425,8 +428,9 @@ def token_ids_to_text(token_ids, tokenizer):
 
 def calc_loss_batch(input_batch, target_batch, model, device):
     input_batch, target_batch = input_batch.to(device), target_batch.to(device)
-    logits = model(input_batch)
-    loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1), target_batch.flatten())
+    with torch.cuda.amp.autocast():
+        logits = model(input_batch)
+        loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1), target_batch.flatten())
     return loss
 
 
