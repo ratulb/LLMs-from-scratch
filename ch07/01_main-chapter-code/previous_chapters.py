@@ -79,7 +79,15 @@ class MultiHeadAttention(nn.Module):
         self.out_proj = nn.Linear(d_out, d_out)  # Linear layer to combine head outputs
         self.dropout = nn.Dropout(dropout)
         self.register_buffer('mask', torch.triu(torch.ones(context_length, context_length), diagonal=1))
-
+        self._init_weights()
+    
+    def _init_weights(self):
+        """Initialize weights of Q, K, V, and output projection layers."""
+        nn.init.xavier_uniform_(self.W_query.weight)
+        nn.init.xavier_uniform_(self.W_key.weight)
+        nn.init.xavier_uniform_(self.W_value.weight)
+        nn.init.xavier_uniform_(self.out_proj.weight)
+    
     def forward(self, x):
         b, num_tokens, d_in = x.shape
 
@@ -151,10 +159,14 @@ class GELU(nn.Module):
 class FeedForward(nn.Module):
     def __init__(self, cfg):
         super().__init__()
+        lin_1 = nn.Linear(cfg["emb_dim"], 4 * cfg["emb_dim"])
+        lin_2 = nn.Linear(4 * cfg["emb_dim"], cfg["emb_dim"])
+        nn.init.xavier_uniform_(lin_1.weight)
+        nn.init.xavier_uniform_(lin_2.weight)
         self.layers = nn.Sequential(
-            nn.Linear(cfg["emb_dim"], 4 * cfg["emb_dim"]),
+            lin_1,
             GELU(),
-            nn.Linear(4 * cfg["emb_dim"], cfg["emb_dim"]),
+            lin_2
         )
 
     def forward(self, x):
@@ -200,12 +212,15 @@ class GPTModel(nn.Module):
         self.tok_emb = nn.Embedding(cfg["vocab_size"], cfg["emb_dim"])
         self.pos_emb = nn.Embedding(cfg["context_length"], cfg["emb_dim"])
         self.drop_emb = nn.Dropout(cfg["drop_rate"])
-
         self.trf_blocks = nn.Sequential(
             *[TransformerBlock(cfg) for _ in range(cfg["n_layers"])])
 
         self.final_norm = LayerNorm(cfg["emb_dim"])
         self.out_head = nn.Linear(cfg["emb_dim"], cfg["vocab_size"], bias=False)
+        
+        nn.init.xavier_uniform_(self.tok_emb)
+        nn.init.xavier_uniform_(self.pos_emb)
+        nn.init.xavier_uniform_(self.out_head)
 
     def forward(self, in_idx):
         batch_size, seq_len = in_idx.shape
