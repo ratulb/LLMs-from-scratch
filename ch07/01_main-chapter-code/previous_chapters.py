@@ -15,6 +15,7 @@ import tiktoken
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
+from torch.amp import autocast
 
 
 #####################################
@@ -428,7 +429,7 @@ def token_ids_to_text(token_ids, tokenizer):
 
 def calc_loss_batch(input_batch, target_batch, model, device):
     input_batch, target_batch = input_batch.to(device), target_batch.to(device)
-    with autocast(device):
+    with autocast("cuda" if torch.cuda.is_available() else "cpu"):
         logits = model(input_batch)
         loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1), target_batch.flatten())
     return loss
