@@ -286,7 +286,7 @@ def generate(model, idx, max_new_tokens, context_size, temperature=0.0, top_k=No
     return idx
 
 
-def train_model_simple(model, train_loader, val_loader, optimizer, device, num_epochs, scaler,
+def train_model_simple(model, train_loader, val_loader, optimizer, device, scaler, num_epochs, 
                        eval_freq, eval_iter, start_context, tokenizer, scaler):
     # Initialize lists to track losses and tokens seen
     train_losses, val_losses, track_tokens_seen = [], [], []
