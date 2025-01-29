@@ -217,9 +217,6 @@ class GPTModel(nn.Module):
 
         self.final_norm = LayerNorm(cfg["emb_dim"])
         self.out_head = nn.Linear(cfg["emb_dim"], cfg["vocab_size"], bias=False)
-        
-        nn.init.xavier_uniform_(self.tok_emb)
-        nn.init.xavier_uniform_(self.pos_emb)
         nn.init.xavier_uniform_(self.out_head)
 
     def forward(self, in_idx):
