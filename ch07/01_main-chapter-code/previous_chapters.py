@@ -87,6 +87,14 @@ class MultiHeadAttention(nn.Module):
         nn.init.xavier_uniform_(self.W_key.weight)
         nn.init.xavier_uniform_(self.W_value.weight)
         nn.init.xavier_uniform_(self.out_proj.weight)
+        if self.W_query.bias is not None:
+            nn.init.zeros_(self.W_query.bias)
+        if self.W_key.bias is not None:
+            nn.init.zeros_(self.W_key.bias)
+        if self.W_value.bias is not None:
+            nn.init.zeros_(self.W_value.bias)
+        if self.out_proj.bias is not None:
+            nn.init.zeros_(self.out_proj.bias)
     
     def forward(self, x):
         b, num_tokens, d_in = x.shape
@@ -162,6 +170,11 @@ class FeedForward(nn.Module):
         lin_1 = nn.Linear(cfg["emb_dim"], 4 * cfg["emb_dim"])
         lin_2 = nn.Linear(4 * cfg["emb_dim"], cfg["emb_dim"])
         nn.init.xavier_uniform_(lin_1.weight)
+        if lin_1.bias is not None:
+            nn.init.zeros_(lin_1.bias)
+        if lin_2.bias is not None:
+            nn.init.zeros_(lin_2.bias)
+        
         nn.init.xavier_uniform_(lin_2.weight)
         self.layers = nn.Sequential(
             lin_1,
@@ -217,7 +230,11 @@ class GPTModel(nn.Module):
 
         self.final_norm = LayerNorm(cfg["emb_dim"])
         self.out_head = nn.Linear(cfg["emb_dim"], cfg["vocab_size"], bias=False)
-        nn.init.xavier_uniform_(self.out_head)
+        nn.init.xavier_uniform_(self.tok_emb.weight)
+        nn.init.xavier_uniform_(self.pos_emb.weight)
+        nn.init.xavier_uniform_(self.out_head.weight)
+        if self.self.out_head is not None:
+            nn.init.zeros_(self.out_head)
 
     def forward(self, in_idx):
         batch_size, seq_len = in_idx.shape
