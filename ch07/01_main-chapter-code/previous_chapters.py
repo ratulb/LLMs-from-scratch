@@ -233,7 +233,7 @@ class GPTModel(nn.Module):
         nn.init.xavier_uniform_(self.tok_emb.weight)
         nn.init.xavier_uniform_(self.pos_emb.weight)
         nn.init.xavier_uniform_(self.out_head.weight)
-        if self.self.out_head.bias is not None:
+        if self.out_head.bias is not None:
             nn.init.zeros_(self.out_head.bias)
 
     def forward(self, in_idx):
